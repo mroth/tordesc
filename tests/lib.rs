@@ -126,14 +126,6 @@ fn parse_uptime() {
 }
 
 #[test]
-fn parse_contact() {
-    assert_eq!(
-        parse(SAMPLE).unwrap().contact,
-        Some("0xCDD0190B Craig Andrews <candrews@integralblue.com>")
-    );
-}
-
-#[test]
 fn parse_onion_key() {
     let expected = Some(r#"-----BEGIN RSA PUBLIC KEY-----
 MIGJAoGBALD6Dbj1okBj4mmz/sCgIGFJk/CTWlMsT3CS1kP7Q2gAaDewEbo1+me3
@@ -155,6 +147,13 @@ tHeXU1pvc/E7SA0IpUjm80z0HhSA3oGwuP4IEB1U1IxxiJNFaBk7AgMBAAE=
     assert_eq!(parse(SAMPLE).unwrap().signing_key, expected);
 }
 
+#[test]
+fn parse_contact() {
+    assert_eq!(
+        parse(SAMPLE).unwrap().contact,
+        Some("0xCDD0190B Craig Andrews <candrews@integralblue.com>")
+    );
+}
 
 #[test]
 fn parse_all_in_file() {

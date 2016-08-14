@@ -71,10 +71,6 @@ pub struct ServerDescriptor<'a> {
     /// Tor versions before 0.2.0.1-alpha don't recognize this.
     pub extra_info_digest: Option<&'a str>,
 
-    /// Describes a way to contact the relay's administrator, preferably including an email
-    /// address and a PGP key fingerprint.
-    pub contact: Option<&'a str>,
-
     /// This key is used to encrypt CREATE cells for this OR.  The key MUST be accepted for at
     /// least 1 week after any new key is published in a subsequent descriptor. It MUST be 1024
     /// bits.
@@ -87,6 +83,10 @@ pub struct ServerDescriptor<'a> {
     ///
     /// The encoding is as for "onion-key" above.
     pub signing_key: Option<&'a str>,
+
+    /// Describes a way to contact the relay's administrator, preferably including an email
+    /// address and a PGP key fingerprint.
+    pub contact: Option<&'a str>,
 
     // we own unprocessed items here, for later debugging...
     // they will show up when we dump the items, so easy to visualize what we're not handling.
@@ -171,10 +171,6 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 }
             }
 
-            Item { key: "contact", args: Some(args), ..} => {
-                sd.contact = Some(args);
-            }
-
             Item { key: "onion-key", args: None, objs: o} => {
                 if let Some(onion_key) = o.first() {
                     sd.onion_key = Some(onion_key);
@@ -185,6 +181,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 if let Some(signing_key) = o.first() {
                     sd.signing_key = Some(signing_key);
                 }
+            }
+
+            Item { key: "contact", args: Some(args), ..} => {
+                sd.contact = Some(args);
             }
 
             _ => {
