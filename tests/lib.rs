@@ -71,6 +71,14 @@ fn parse_platform() {
 }
 
 #[test]
+fn parse_published() {
+    assert_eq!(
+        parse(SAMPLE).unwrap().published,
+        Some("2014-12-05 22:01:13")
+    );
+}
+
+#[test]
 fn parse_router() {
     let sd = parse(SAMPLE).unwrap();
     assert_eq!(sd.nickname,     "LetFreedomRing");

@@ -23,6 +23,15 @@ pub struct ServerDescriptor<'a> {
     /// implementing the Tor protocol. [At most once]
     pub platform: Option<&'a str>,
 
+    /// The time, in UTC, when this descriptor (and its corresponding extra-info document if any)
+    /// was generated.
+    ///
+    /// The format for the time is YYYY-MM-DD HH:MM:SS.
+    ///
+    /// Since Rust does not have a standard datetime in the stdlib (yet), this is left as ASCII so
+    /// that the consumer of this library can pick their desired time representation.
+    pub published: Option<&'a str>,
+
     /// The number of seconds that this OR process has been running. [At most once]
     pub uptime: Option<u64>,
 
@@ -95,6 +104,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.platform = Some(p);
                 }
             },
+
+            Item { key: "published", args: Some(args), ..} => {
+                sd.published = Some(args);
+            }
 
             Item { key: "router", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = router(args.as_bytes()) {
