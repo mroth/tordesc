@@ -81,6 +81,14 @@ fn parse_platform() {
 }
 
 #[test]
+fn parse_protocols() {
+    assert_eq!(
+        parse(SAMPLE).unwrap().protocols,
+        Some("Link 1 2 Circuit 1")
+    );
+}
+
+#[test]
 fn parse_published() {
     assert_eq!(
         parse(SAMPLE).unwrap().published,

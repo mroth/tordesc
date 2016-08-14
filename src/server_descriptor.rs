@@ -23,6 +23,18 @@ pub struct ServerDescriptor<'a> {
     /// implementing the Tor protocol. [At most once]
     pub platform: Option<&'a str>,
 
+    /// List of protocols supporter by the server.
+    ///
+    ///   `"Link" SP LINK-VERSION-LIST SP "Circuit" SP CIRCUIT-VERSION-LIST NL`
+    ///
+    /// Both lists are space-separated sequences of numbers, to indicate which protocols the server
+    /// supports.  As of 30 Mar 2008, specified protocols are "Link 1 2 Circuit 1".  See section
+    /// 4.1 of `tor-spec.txt` for more information about link protocol versions.
+    ///
+    /// NOTE: No version of Tor uses this protocol list.  It will be removed in a future version of
+    /// Tor. (Because of this, we don't bother to parse it into structured data in this library.)
+    pub protocols: Option<&'a str>,
+
     /// The time, in UTC, when this descriptor (and its corresponding extra-info document if any)
     /// was generated.
     ///
@@ -120,6 +132,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.platform = Some(p);
                 }
             },
+
+            Item { key: "protocols", args: Some(args), ..} => {
+                sd.protocols = Some(args);
+            }
 
             Item { key: "published", args: Some(args), ..} => {
                 sd.published = Some(args);
