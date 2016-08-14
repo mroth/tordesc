@@ -84,6 +84,11 @@ pub struct ServerDescriptor<'a> {
     /// The encoding is as for "onion-key" above.
     pub signing_key: Option<&'a str>,
 
+    /// Present only if this router stores and serves hidden service descriptors. If any
+    /// VersionNum(s) are specified, this router supports those descriptor versions. If none are
+    /// specified, it defaults to version 2 descriptors.
+    pub hidden_service_dir: Option<&'a str>,
+
     /// Describes a way to contact the relay's administrator, preferably including an email
     /// address and a PGP key fingerprint.
     pub contact: Option<&'a str>,
@@ -181,6 +186,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 if let Some(signing_key) = o.first() {
                     sd.signing_key = Some(signing_key);
                 }
+            }
+
+            Item { key: "hidden-service-dir", args, ..} => {
+                sd.hidden_service_dir = args;
             }
 
             Item { key: "contact", args: Some(args), ..} => {

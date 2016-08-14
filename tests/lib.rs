@@ -148,6 +148,14 @@ tHeXU1pvc/E7SA0IpUjm80z0HhSA3oGwuP4IEB1U1IxxiJNFaBk7AgMBAAE=
 }
 
 #[test]
+fn parse_hidden_service_dir() {
+    assert_eq!(
+        parse(SAMPLE).unwrap().hidden_service_dir,
+        None
+    );
+}
+
+#[test]
 fn parse_contact() {
     assert_eq!(
         parse(SAMPLE).unwrap().contact,
