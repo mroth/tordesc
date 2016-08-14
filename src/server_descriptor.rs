@@ -64,6 +64,13 @@ pub struct ServerDescriptor<'a> {
     /// numbers.
     pub bandwidth_observed: u64,
 
+    /// "Digest" is a hex-encoded digest (using upper-case characters) of the router's extra-info
+    /// document, as signed in the router's extra-info (that is, not including the signature).  (If
+    /// this field is absent, the router is not uploading a corresponding extra-info document.)
+    ///
+    /// Tor versions before 0.2.0.1-alpha don't recognize this.
+    pub extra_info_digest: Option<&'a str>,
+
     /// Describes a way to contact the relay's administrator, preferably including an email
     /// address and a PGP key fingerprint.
     pub contact: Option<&'a str>,
@@ -153,6 +160,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.bandwidth_observed = obs;
                 }
             },
+
+            Item { key: "extra-info-digest", args: Some(args), ..} => {
+                sd.extra_info_digest = Some(args);
+            }
 
             Item { key: "uptime", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = uptime(args.as_bytes()) {

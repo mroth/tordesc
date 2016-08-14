@@ -113,6 +113,14 @@ fn parse_bandwidth() {
 }
 
 #[test]
+fn parse_extra_info_digest() {
+    assert_eq!(
+        parse(SAMPLE).unwrap().extra_info_digest,
+        Some("15FA36289DD75D89B389CED0BE23D80FB50629BD")
+    );
+}
+
+#[test]
 fn parse_uptime() {
     assert_eq!(parse(SAMPLE).unwrap().uptime, Some(339587));
 }
