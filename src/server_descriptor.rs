@@ -99,16 +99,6 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
     let mut sd: ServerDescriptor = Default::default();
     for item in item_bucket {
         match item {
-            Item { key: "platform", args: Some(args), ..} => {
-                if let IResult::Done(_, p) = platform(args.as_bytes()) {
-                    sd.platform = Some(p);
-                }
-            },
-
-            Item { key: "published", args: Some(args), ..} => {
-                sd.published = Some(args);
-            }
-
             Item { key: "router", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = router(args.as_bytes()) {
                     let (nickname, address, or_port, socks_port, dir_port) = p;
@@ -119,6 +109,16 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.dir_port   = dir_port;
                 }
             },
+
+            Item { key: "platform", args: Some(args), ..} => {
+                if let IResult::Done(_, p) = platform(args.as_bytes()) {
+                    sd.platform = Some(p);
+                }
+            },
+
+            Item { key: "published", args: Some(args), ..} => {
+                sd.published = Some(args);
+            }
 
             Item { key: "bandwidth", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = bandwidth(args.as_bytes()) {

@@ -63,6 +63,16 @@ fn dump_server_descriptor() {
 }
 
 #[test]
+fn parse_router() {
+    let sd = parse(SAMPLE).unwrap();
+    assert_eq!(sd.nickname,     "LetFreedomRing");
+    assert_eq!(sd.address,      Some(Ipv4Addr::new(24,233,74,111)));
+    assert_eq!(sd.or_port,      9001);
+    assert_eq!(sd.socks_port,   0);
+    assert_eq!(sd.dir_port,     0);
+}
+
+#[test]
 fn parse_platform() {
     assert_eq!(
         parse(SAMPLE).unwrap().platform,
@@ -76,16 +86,6 @@ fn parse_published() {
         parse(SAMPLE).unwrap().published,
         Some("2014-12-05 22:01:13")
     );
-}
-
-#[test]
-fn parse_router() {
-    let sd = parse(SAMPLE).unwrap();
-    assert_eq!(sd.nickname,     "LetFreedomRing");
-    assert_eq!(sd.address,      Some(Ipv4Addr::new(24,233,74,111)));
-    assert_eq!(sd.or_port,      9001);
-    assert_eq!(sd.socks_port,   0);
-    assert_eq!(sd.dir_port,     0);
 }
 
 #[test]
