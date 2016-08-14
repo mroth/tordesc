@@ -89,6 +89,14 @@ fn parse_published() {
 }
 
 #[test]
+fn parse_fingerprint() {
+    assert_eq!(
+        parse(SAMPLE).unwrap().fingerprint,
+        Some("DA4D EC93 C8D2 F187 C027 A96D 3925 C153 1D90 A89E")
+    );
+}
+
+#[test]
 fn parse_bandwidth() {
     let sd = parse(SAMPLE).unwrap();
     assert_eq!(sd.bandwidth_avg,        20480);

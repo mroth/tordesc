@@ -32,6 +32,11 @@ pub struct ServerDescriptor<'a> {
     /// that the consumer of this library can pick their desired time representation.
     pub published: Option<&'a str>,
 
+    /// A fingerprint (a HASH_LEN-byte of asn1 encoded public key, encoded in hex, with a single
+    /// space after every 4 characters) for this router's identity key. A descriptor is considered
+    /// invalid (and MUST be rejected) if the fingerprint line does not match the public key.
+    pub fingerprint: Option<&'a str>,
+
     /// The number of seconds that this OR process has been running. [At most once]
     pub uptime: Option<u64>,
 
@@ -118,6 +123,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
 
             Item { key: "published", args: Some(args), ..} => {
                 sd.published = Some(args);
+            }
+
+            Item { key: "fingerprint", args: Some(args), ..} => {
+                sd.fingerprint = Some(args);
             }
 
             Item { key: "bandwidth", args: Some(args), ..} => {
