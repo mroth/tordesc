@@ -1,0 +1,31 @@
+[package]
+name = "tordesc"
+version = "0.1.0"
+authors = ["Matthew Rothenberg <mrothenberg@gmail.com>"]
+publish = false # remove me when ready to publish first version!
+
+# A short blurb about the package. This is not rendered in any format when
+# uploaded to crates.io (aka this is not markdown).
+description = "Parser for Tor network data descriptors."
+
+# These URLs point to more information about the repository.
+# documentation = "..."
+# homepage = "..."
+# repository = "..."
+
+# This points to a file in the repository (relative to this `Cargo.toml`). The
+# contents of this file are stored and indexed in the registry.
+# readme = "..."
+
+# This is a small list of keywords used to categorize and search for this
+# package.
+# keywords = ["...", "..."]
+
+# This is a string description of the license for this package. Currently
+# crates.io will validate the license provided against a whitelist of known
+# license identifiers from http://spdx.org/licenses/. Multiple licenses can be
+# separated with a `/`.
+# license = "..."
+
+[dependencies]
+nom = "^1.2.4"
