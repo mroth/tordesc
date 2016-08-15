@@ -330,15 +330,6 @@ named!(uptime <u64>,
     call!(u64_digit)
 );
 
-// "published" YYYY-MM-DD HH:MM:SS NL
-//
-//    [Exactly once]
-//
-//    The time, in UTC, when this descriptor (and its corresponding
-//    extra-info document if any)  was generated.
-
-// TODO: implement me
-
 
 
 named!(ipv4_addr <Ipv4Addr>,
