@@ -164,6 +164,14 @@ fn parse_contact() {
 }
 
 #[test]
+fn parse_ntor_onion_key() {
+    assert_eq!(
+        parse(SAMPLE).unwrap().ntor_onion_key,
+        Some("q8Qg9PaoBm59j7cEJcOrzTUazVt3D8Ax4L3oaO8PaxU=")
+    );
+}
+
+#[test]
 fn parse_all_in_file() {
     let path = Path::new("sample/2016-08-06-03-06-03-server-descriptors");
     // Open the path in read-only mode, returns `io::Result<File>`

@@ -93,6 +93,12 @@ pub struct ServerDescriptor<'a> {
     /// address and a PGP key fingerprint.
     pub contact: Option<&'a str>,
 
+    /// A curve25519 public key used for the ntor circuit extended handshake.  It's the standard
+    /// encoding of the OR's curve25519 public key, encoded in base 64.  The trailing `=` sign may
+    /// be omitted from the base64 encoding.  The key MUST be accepted for at least 1 week after
+    /// any new key is published in a subsequent descriptor.
+    pub ntor_onion_key: Option<&'a str>,
+
     // we own unprocessed items here, for later debugging...
     // they will show up when we dump the items, so easy to visualize what we're not handling.
     unprocessed_items: Vec<Item<'a>>,
@@ -194,6 +200,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
 
             Item { key: "contact", args: Some(args), ..} => {
                 sd.contact = Some(args);
+            }
+
+            Item { key: "ntor-onion-key", args: Some(args), ..} => {
+                sd.ntor_onion_key = Some(args);
             }
 
             _ => {
