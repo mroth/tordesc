@@ -189,16 +189,12 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 }
             }
 
-            Item { key: "onion-key", args: None, objs: o} => {
-                if let Some(onion_key) = o.first() {
-                    sd.onion_key = Some(onion_key);
-                }
+            Item { key: "onion-key", args: None, obj: Some(o)} => {
+                sd.onion_key = Some(o);
             }
 
-            Item { key: "signing-key", args: None, objs: o} => {
-                if let Some(signing_key) = o.first() {
-                    sd.signing_key = Some(signing_key);
-                }
+            Item { key: "signing-key", args: None, obj: Some(o)} => {
+                sd.signing_key = Some(o);
             }
 
             Item { key: "hidden-service-dir", args, ..} => {
@@ -213,10 +209,8 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 sd.ntor_onion_key = Some(args);
             }
 
-            Item { key: "router-signature", args: None, objs: o} => {
-                if let Some(router_signature) = o.first() {
-                    sd.router_signature = Some(router_signature);
-                }
+            Item { key: "router-signature", args: None, obj: Some(o)} => {
+                sd.router_signature = Some(o);
             }
 
             _ => {
