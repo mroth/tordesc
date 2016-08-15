@@ -1,3 +1,19 @@
+//! Tor `Document` extensible information format common grammars.
+//!
+//! Server descriptors, directories, and running-routers documents all obey the
+//! following lightweight extensible information format.
+//!
+//! > The highest level object is a Document, which consists of one or more
+//! > Items.  Every Item begins with a KeywordLine, followed by zero or more
+//! > Objects. A KeywordLine begins with a Keyword, optionally followed by
+//! > whitespace and more non-newline characters, and ends with a newline.  A
+//! > Keyword is a sequence of one or more characters in the set `[A-Za-z0-9-]`.
+//! > An Object is a block of encoded data in pseudo-Open-PGP-style
+//! > armor. (cf. RFC 2440)
+//!
+//! This module provides common grammar for dealing with this format, defined with
+//! a formal grammar.
+
 //  1.2. Document meta-format
 //
 //  Server descriptors, directories, and running-routers documents all obey the
@@ -40,8 +56,16 @@
 use std::str;
 use nom::{line_ending, not_line_ending, space, alphanumeric};
 
+/// A Document consists of one or more Items.
 #[derive(Debug)]
-pub struct Item<'a> { pub key: &'a str, pub args: Option<&'a str>, pub objs: Vec<&'a str> }
+pub struct Item<'a> {
+    /// The "key word" defining the topic of the `Item`.
+    pub key: &'a str,
+    /// All arguments, if any, following the key word on the keyword line.
+    pub args: Option<&'a str>,
+    /// Each object is a block of encoded data in pseudo-Open-PGP-style armor. (cf. RFC 2440)
+    pub objs: Vec<&'a str>,
+}
 named!(pub item <Item>,
     chain!(
         kl:   keyword_line ~

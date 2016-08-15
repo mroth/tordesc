@@ -1,3 +1,5 @@
+//! Relay Server Descriptors (`@type server-descriptor 1.0`).
+
 use std::str;
 use std::net::Ipv4Addr;
 use nom::{line_ending, not_line_ending, alphanumeric, space};
@@ -9,16 +11,20 @@ use self::exit_policy::*;
 use document::*;
 use grammar::*;
 
+/// Common data from a parsed server descriptor.
 #[derive(Default, Debug)]
 pub struct ServerDescriptor<'a> {
+    /// Router nickname.
     pub nickname: &'a str,
+
+    /// IPv4 network address for the OR.
     pub address: Option<Ipv4Addr>, // TODO: figure out how to make this non-optional?
 
-    /// Port at which this OR accepts TLS connections for the main OR protocol
+    /// Port at which this OR accepts TLS connections for the main OR protocol.
     pub or_port: u16,
-    /// SOCKSPort is deprecated and should always be 0
+    /// SOCKSPort is deprecated and should always be 0.
     pub socks_port: u16,
-    /// Port at which this OR accepts directory-related HTTP connections
+    /// Port at which this OR accepts directory-related HTTP connections.
     pub dir_port: u16,
 
     /// A human-readable string describing the system on which this OR is running.  This MAY
@@ -34,30 +40,32 @@ pub struct ServerDescriptor<'a> {
     /// supports.  As of 30 Mar 2008, specified protocols are "Link 1 2 Circuit 1".  See section
     /// 4.1 of `tor-spec.txt` for more information about link protocol versions.
     ///
-    /// NOTE: No version of Tor uses this protocol list.  It will be removed in a future version of
-    /// Tor. (Because of this, we don't bother to parse it into structured data in this library.)
+    /// _NOTE: No version of Tor uses this protocol list.  It will be removed in a future version
+    /// of Tor. (Because of this, we don't bother to parse it into structured data in this
+    /// library.)_
     pub protocols: Option<&'a str>,
 
     /// The time, in UTC, when this descriptor (and its corresponding extra-info document if any)
     /// was generated.
     ///
-    /// The format for the time is YYYY-MM-DD HH:MM:SS.
+    /// The format for the time is `YYYY-MM-DD HH:MM:SS`.
     ///
     /// Since Rust does not have a standard datetime in the stdlib (yet), this is left as ASCII so
     /// that the consumer of this library can pick their desired time representation.
     pub published: Option<&'a str>,
 
-    /// A fingerprint (a HASH_LEN-byte of asn1 encoded public key, encoded in hex, with a single
+    /// A fingerprint (a `HASH_LEN`-byte of asn1 encoded public key, encoded in hex, with a single
     /// space after every 4 characters) for this router's identity key. A descriptor is considered
     /// invalid (and MUST be rejected) if the fingerprint line does not match the public key.
     pub fingerprint: Option<&'a str>,
 
-    /// The number of seconds that this OR process has been running. [At most once]
+    /// The number of seconds that this OR process has been running.
     pub uptime: Option<u64>,
 
-    /// Bytes per second that the OR is willing to sustain over long periods
+    /// Bytes per second that the OR is willing to sustain over long periods.
     pub bandwidth_avg: u64,
-    /// Bytes per second that the OR is willing to sustain in very short intervals
+
+    /// Bytes per second that the OR is willing to sustain in very short intervals.
     pub bandwidth_burst: u64,
 
     /// The "observed" bandwidth value is an estimate of the capacity this relay can handle.
@@ -71,7 +79,7 @@ pub struct ServerDescriptor<'a> {
     /// document, as signed in the router's extra-info (that is, not including the signature).  (If
     /// this field is absent, the router is not uploading a corresponding extra-info document.)
     ///
-    /// Tor versions before 0.2.0.1-alpha don't recognize this.
+    /// Tor versions before `0.2.0.1-alpha` don't recognize this.
     pub extra_info_digest: Option<&'a str>,
 
     /// This key is used to encrypt CREATE cells for this OR.  The key MUST be accepted for at
@@ -79,10 +87,10 @@ pub struct ServerDescriptor<'a> {
     /// bits.
     ///
     /// The key encoding is the encoding of the key as a PKCS#1 RSAPublicKey structure, encoded in
-    /// base64, and wrapped in "-----BEGIN RSA PUBLIC KEY-----" and "-----END RSA PUBLIC KEY-----".
+    /// base64, and wrapped in `-----BEGIN RSA PUBLIC KEY-----` and `-----END RSA PUBLIC KEY-----`.
     pub onion_key: Option<&'a str>,
 
-    /// The OR's long-term RSA identity key.  It MUST be 1024 bits
+    /// The OR's long-term RSA identity key.  It MUST be 1024 bits.
     ///
     /// The encoding is as for "onion-key" above.
     pub signing_key: Option<&'a str>,
