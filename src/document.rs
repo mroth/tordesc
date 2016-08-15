@@ -41,12 +41,12 @@ use std::str;
 use nom::{line_ending, not_line_ending, space, alphanumeric};
 
 #[derive(Debug)]
-pub struct Item<'a> { pub key: &'a str, pub args: Option<&'a str>, pub objs: Vec<&'a str> }
+pub struct Item<'a> { pub key: &'a str, pub args: Option<&'a str>, pub obj: Option<&'a str> }
 named!(pub item <Item>,
     chain!(
         kl:   keyword_line ~
-        objs: many0!(map_res!(object, str::from_utf8)) ,
-        || { Item{ key: kl.key,  args: kl.args, objs: objs } }
+        obj:  opt!(map_res!(object, str::from_utf8)) ,
+        || { Item{ key: kl.key,  args: kl.args, obj: obj } }
     )
 );
 
