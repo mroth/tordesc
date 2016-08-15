@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate nom;
 
-mod document;
+mod grammar;
+
+pub mod document;
 pub mod server_descriptor;

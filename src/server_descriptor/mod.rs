@@ -1,10 +1,13 @@
-use std::net::Ipv4Addr;
 use std::str;
-use std::str::FromStr;
-use nom::{line_ending, not_line_ending, alphanumeric, digit, space};
+use std::net::Ipv4Addr;
+use nom::{line_ending, not_line_ending, alphanumeric, space};
 use nom::IResult;
 
+pub mod exit_policy;
+use self::exit_policy::*;
+
 use document::*;
+use grammar::*;
 
 #[derive(Default, Debug)]
 pub struct ServerDescriptor<'a> {
@@ -106,15 +109,17 @@ pub struct ServerDescriptor<'a> {
     /// identity key.
     pub router_signature: Option<&'a str>, // TODO: make non-Optional and pre-parse as last Item?
 
+    /// The rules this OR follows when deciding whether to allow a new stream to a given address.
+    pub exit_policy: ExitPolicy,
+
     // we own unprocessed items here, for later debugging...
     // they will show up when we dump the items, so easy to visualize what we're not handling.
     unprocessed_items: Vec<Item<'a>>,
 }
 // TODO: implement Validate() to check things at end?
 
+// TODO: we can do better than this for communicating error handling.
 pub type ParseError = u32;
-type Port = u16;
-
 
 pub fn parse(input: &str) -> Result<ServerDescriptor, ParseError> {
     // dont need to have a parse_item function if we understand named macro return type?
@@ -150,6 +155,7 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.socks_port = socks_port;
                     sd.dir_port   = dir_port;
                 }
+                // TODO: mark err in unprocessed_items
             },
 
             Item { key: "platform", args: Some(args), ..} => {
@@ -187,6 +193,7 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 if let IResult::Done(_, p) = uptime(args.as_bytes()) {
                     sd.uptime = Some(p);
                 }
+                // TODO: mark err in unprocessed_items
             }
 
             Item { key: "onion-key", args: None, objs: o} => {
@@ -216,6 +223,28 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
             Item { key: "router-signature", args: None, objs: o} => {
                 if let Some(router_signature) = o.first() {
                     sd.router_signature = Some(router_signature);
+                }
+            }
+
+            Item { key: "accept", args: Some(args), ..} => {
+                if let IResult::Done(_, res) = parse_exit_pattern(args.as_bytes()) {
+                    let (a,p) = res;
+                    sd.exit_policy.push(
+                        ExitPattern{ rule: Rule::Accept, addr: a, port: p }
+                    );
+                } else {
+                    sd.unprocessed_items.push(item);
+                }
+            }
+
+            Item { key: "reject", args: Some(args), ..} => {
+                if let IResult::Done(_, res) = parse_exit_pattern(args.as_bytes()) {
+                    let (a,p) = res;
+                    sd.exit_policy.push(
+                        ExitPattern{ rule: Rule::Reject, addr: a, port: p }
+                    );
+                } else {
+                    sd.unprocessed_items.push(item);
                 }
             }
 
@@ -255,7 +284,7 @@ named!(server_descriptor_bucket < Vec<Item> >,
 //   number.  (At least one of DirPort and ORPort SHOULD be set;
 //   authorities MAY reject any descriptor with both DirPort and ORPort of
 //   0.)
-named!(router <&[u8], (&str, Ipv4Addr, Port, Port, Port)>,
+named!(router <&[u8], (&str, Ipv4Addr, u16, u16, u16)>,
     chain!(
                     // tag!("router") ~
                     // space ~
@@ -328,42 +357,4 @@ named!(platform <&str>,
 //    The number of seconds that this OR process has been running.
 named!(uptime <u64>,
     call!(u64_digit)
-);
-
-
-
-named!(ipv4_addr <Ipv4Addr>,
-    chain!(
-        a: u8_digit  ~
-        tag!(".") ~
-        b: u8_digit  ~
-        tag!(".") ~
-        c: u8_digit  ~
-        tag!(".") ~
-        d: u8_digit  ,
-        || {
-            Ipv4Addr::new(a,b,c,d)
-        }
-    )
-);
-
-named!(u8_digit<u8>,
-    map_res!(
-        map_res!(digit, str::from_utf8),
-        FromStr::from_str
-    )
-);
-
-named!(u16_digit<u16>,
-    map_res!(
-        map_res!(digit, str::from_utf8),
-        FromStr::from_str
-    )
-);
-
-named!(u64_digit<u64>,
-    map_res!(
-        map_res!(digit, str::from_utf8),
-        FromStr::from_str
-    )
 );
