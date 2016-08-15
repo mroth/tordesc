@@ -99,6 +99,13 @@ pub struct ServerDescriptor<'a> {
     /// any new key is published in a subsequent descriptor.
     pub ntor_onion_key: Option<&'a str>,
 
+    /// The `SIGNATURE` object contains a signature of the PKCS1-padded hash of the entire server
+    /// descriptor.
+    ///
+    /// The server descriptor is invalid unless the signature is performed with the router's
+    /// identity key.
+    pub router_signature: Option<&'a str>, // TODO: make non-Optional and pre-parse as last Item?
+
     // we own unprocessed items here, for later debugging...
     // they will show up when we dump the items, so easy to visualize what we're not handling.
     unprocessed_items: Vec<Item<'a>>,
@@ -204,6 +211,12 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
 
             Item { key: "ntor-onion-key", args: Some(args), ..} => {
                 sd.ntor_onion_key = Some(args);
+            }
+
+            Item { key: "router-signature", args: None, objs: o} => {
+                if let Some(router_signature) = o.first() {
+                    sd.router_signature = Some(router_signature);
+                }
             }
 
             _ => {

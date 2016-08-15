@@ -172,6 +172,17 @@ fn parse_ntor_onion_key() {
 }
 
 #[test]
+fn parse_router_signature() {
+    let expected = Some(r#"-----BEGIN SIGNATURE-----
+vKWlPhEDoRHOKgDNXE07HFl39b4SmGUDo8DStSzzza+CKVw2RnV41wYBpjRJvu2Q
+VcQb00bfqWP/DK38GmVMgzKRZ7e1k2TpzaeL3ssD3gS6wJPzbIbcL++yUhtPukk/
+tWJ53g/ru8Hiy+h9Wa5gI+Eog/z4hj36GBiaTXJoG3M=
+-----END SIGNATURE-----
+"#);
+    assert_eq!(parse(SAMPLE).unwrap().router_signature, expected);
+}
+
+#[test]
 fn parse_all_in_file() {
     let path = Path::new("sample/2016-08-06-03-06-03-server-descriptors");
     // Open the path in read-only mode, returns `io::Result<File>`
