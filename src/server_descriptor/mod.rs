@@ -236,8 +236,9 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.or_port    = or_port;
                     sd.socks_port = socks_port;
                     sd.dir_port   = dir_port;
+                } else {
+                    sd.unprocessed_items.push(item);
                 }
-                // TODO: mark err in unprocessed_items
             },
 
             Item { key: "bandwidth", args: Some(args), ..} => {
@@ -246,14 +247,17 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.bandwidth_avg      = avg;
                     sd.bandwidth_burst    = bur;
                     sd.bandwidth_observed = obs;
+                } else {
+                    sd.unprocessed_items.push(item);
                 }
             },
 
             Item { key: "uptime", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = uptime(args.as_bytes()) {
                     sd.uptime = Some(p);
+                } else {
+                    sd.unprocessed_items.push(item);
                 }
-                // TODO: mark err in unprocessed_items
             }
 
             Item { key: "hidden-service-dir", args, ..} => {
