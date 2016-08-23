@@ -27,6 +27,19 @@ pub struct ServerDescriptor<'a> {
     /// Port at which this OR accepts directory-related HTTP connections.
     pub dir_port: u16,
 
+    /// The certificate is a base64-encoded Ed25519 certificate (see `cert-spec.txt`) with
+    /// terminating =s removed.  When this element is present, it MUST appear as the first or
+    /// second element in the router descriptor.
+    ///
+    /// The certificate has CERT_TYPE of [04].  It must include a signed-with-ed25519-key extension
+    /// (see `cert-spec.txt`, section `2.2.1`), so that we can extract the master identity key.
+    pub identity_ed25519: Option<&'a str>,
+
+    /// Contains the base-64 encoded ed25519 master key.
+    ///
+    /// If it is present, it MUST match the identity key in the identity-ed25519 entry.
+    pub master_key_ed25519: Option<&'a str>,
+
     /// A human-readable string describing the system on which this OR is running.  This MAY
     /// include the operating system, and SHOULD include the name and version of the software
     /// implementing the Tor protocol. [At most once]
@@ -110,6 +123,18 @@ pub struct ServerDescriptor<'a> {
     /// any new key is published in a subsequent descriptor.
     pub ntor_onion_key: Option<&'a str>,
 
+    /// Contains an Ed25519 signature of a SHA256 digest of the entire document, from the first
+    /// character up to and including the first space after the "router-sig-ed25519" string,
+    /// prefixed with the string "Tor router descriptor signature v1".
+    ///
+    /// Required when identity-ed25519 is present; forbidden otherwise.
+    ///
+    /// The signature is encoded in Base64 with terminating `=`s removed.
+    ///
+    /// The signing key in the identity-ed25519 certificate MUST be the one used to sign the
+    /// document.
+    pub router_sig_ed25519: Option<&'a str>,
+
     /// The `SIGNATURE` object contains a signature of the PKCS1-padded hash of the entire server
     /// descriptor.
     ///
@@ -122,7 +147,7 @@ pub struct ServerDescriptor<'a> {
 
     // we own unprocessed items here, for later debugging...
     // they will show up when we dump the items, so easy to visualize what we're not handling.
-    unprocessed_items: Vec<Item<'a>>,
+    pub unprocessed_items: Vec<Item<'a>>,
 }
 // TODO: implement Validate() to check things at end?
 
@@ -152,6 +177,7 @@ pub fn parse_all_items(input: &str) -> Vec<Vec<Item>> { //TODO: tmp
 /// Transform a "bucket of items" returns from the parser into a ServiceDescriptor struct.
 fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this a result
     let mut sd: ServerDescriptor = Default::default();
+
     for item in item_bucket {
         match item {
             Item { key: "router", args: Some(args), ..} => {
@@ -165,6 +191,16 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 }
                 // TODO: mark err in unprocessed_items
             },
+
+            Item { key: "identity-ed25519", args: None, objs: o} => {
+                if let Some(ikey) = o.first() {
+                    sd.identity_ed25519 = Some(ikey);
+                }
+            }
+
+            Item { key: "master-key-ed25519", args: Some(args), ..} => {
+                sd.master_key_ed25519 = Some(args);
+            }
 
             Item { key: "platform", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = platform(args.as_bytes()) {
@@ -226,6 +262,10 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
 
             Item { key: "ntor-onion-key", args: Some(args), ..} => {
                 sd.ntor_onion_key = Some(args);
+            }
+
+            Item { key: "router-sig-ed25519", args: Some(args), ..} => {
+                sd.router_sig_ed25519 = Some(args);
             }
 
             Item { key: "router-signature", args: None, objs: o} => {

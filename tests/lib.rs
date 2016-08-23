@@ -73,6 +73,15 @@ fn parse_router() {
 }
 
 #[test]
+fn parse_ed25519() {
+    let sd = parse(SAMPLE).unwrap();
+    assert_eq!(sd.identity_ed25519, None);
+    assert_eq!(sd.master_key_ed25519, None);
+    assert_eq!(sd.router_sig_ed25519, None);
+    // TODO: our sample here does not have these fields, make a secondary sample that does
+}
+
+#[test]
 fn parse_platform() {
     assert_eq!(
         parse(SAMPLE).unwrap().platform,
