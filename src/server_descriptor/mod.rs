@@ -191,7 +191,42 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
     let mut sd: ServerDescriptor = Default::default();
 
     for item in item_bucket {
+        // common pattern for an Item with a KeywordLine consisting of one REQUIRED arg that is
+        // simply treated as a blob of text, with no additional processing required, just store it
+        // in `$field`.
+        macro_rules! singleton_arg { (.$field:ident) => {{
+            if let (Some(args), 0) = (item.args, item.objs.len()) {
+                sd.$field = Some(args);
+            } else {
+                sd.unprocessed_items.push(item);
+            }
+        }}}
+
+        // common pattern for an Item that contains exactly one object (& no args), which will be
+        // simply treated as a blob of text, with no additional processing required, just store it
+        // in `$field`.
+        macro_rules! first_obj { (.$field:ident) => {{
+            if (None, 1) == (item.args, item.objs.len()) {
+                sd.$field = Some(item.objs[0]); //safe because of above len() check
+            } else {
+                sd.unprocessed_items.push(item);
+            }
+        }}}
+
         match item {
+            Item { key: "identity-ed25519", ..}     => first_obj!(.identity_ed25519),
+            Item { key: "master-key-ed25519", ..}   => singleton_arg!(.master_key_ed25519),
+            Item { key: "protocols", ..}            => singleton_arg!(.protocols),
+            Item { key: "fingerprint", ..}          => singleton_arg!(.fingerprint),
+            Item { key: "published", ..}            => singleton_arg!(.published),
+            Item { key: "extra-info-digest", ..}    => singleton_arg!(.extra_info_digest),
+            Item { key: "onion-key", ..}            => first_obj!(.onion_key),
+            Item { key: "signing-key", ..}          => first_obj!(.signing_key),
+            Item { key: "contact", ..}              => singleton_arg!(.contact),
+            Item { key: "ntor-onion-key", ..}       => singleton_arg!(.ntor_onion_key),
+            Item { key: "router-sig-ed25519", ..}   => singleton_arg!(.router_sig_ed25519),
+            Item { key: "router-signature", ..}     => first_obj!(.router_signature),
+
             Item { key: "router", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = router(args.as_bytes()) {
                     let (nickname, address, or_port, socks_port, dir_port) = p;
@@ -204,33 +239,11 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 // TODO: mark err in unprocessed_items
             },
 
-            Item { key: "identity-ed25519", args: None, objs: o} => {
-                if let Some(ikey) = o.first() {
-                    sd.identity_ed25519 = Some(ikey);
-                }
-            }
-
-            Item { key: "master-key-ed25519", args: Some(args), ..} => {
-                sd.master_key_ed25519 = Some(args);
-            }
-
             Item { key: "platform", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = platform(args.as_bytes()) {
                     sd.platform = Some(p);
                 }
             },
-
-            Item { key: "protocols", args: Some(args), ..} => {
-                sd.protocols = Some(args);
-            }
-
-            Item { key: "published", args: Some(args), ..} => {
-                sd.published = Some(args);
-            }
-
-            Item { key: "fingerprint", args: Some(args), ..} => {
-                sd.fingerprint = Some(args);
-            }
 
             Item { key: "bandwidth", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = bandwidth(args.as_bytes()) {
@@ -241,10 +254,6 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 }
             },
 
-            Item { key: "extra-info-digest", args: Some(args), ..} => {
-                sd.extra_info_digest = Some(args);
-            }
-
             Item { key: "uptime", args: Some(args), ..} => {
                 if let IResult::Done(_, p) = uptime(args.as_bytes()) {
                     sd.uptime = Some(p);
@@ -252,38 +261,8 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 // TODO: mark err in unprocessed_items
             }
 
-            Item { key: "onion-key", args: None, objs: o} => {
-                if let Some(onion_key) = o.first() {
-                    sd.onion_key = Some(onion_key);
-                }
-            }
-
-            Item { key: "signing-key", args: None, objs: o} => {
-                if let Some(signing_key) = o.first() {
-                    sd.signing_key = Some(signing_key);
-                }
-            }
-
             Item { key: "hidden-service-dir", args, ..} => {
                 sd.hidden_service_dir = args;
-            }
-
-            Item { key: "contact", args: Some(args), ..} => {
-                sd.contact = Some(args);
-            }
-
-            Item { key: "ntor-onion-key", args: Some(args), ..} => {
-                sd.ntor_onion_key = Some(args);
-            }
-
-            Item { key: "router-sig-ed25519", args: Some(args), ..} => {
-                sd.router_sig_ed25519 = Some(args);
-            }
-
-            Item { key: "router-signature", args: None, objs: o} => {
-                if let Some(router_signature) = o.first() {
-                    sd.router_signature = Some(router_signature);
-                }
             }
 
             Item { key: "accept", args: Some(args), ..} => {
