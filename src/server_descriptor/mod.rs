@@ -213,6 +213,22 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
             }
         }}}
 
+        // common pattern for an Item where the KeywordLine args will parsed with an additional
+        // Nom parser.  Takes the identifier of the parser,  and a closure which will function
+        // as the results handler for the return value of a successful parse.
+        //
+        // If the parser fails for any reason (error, incompete data), the Item is merely added
+        // to the unprocessed_items list.
+        macro_rules! use_parser { ($parser:ident, $results_handler:expr) => {{
+            if let Some(args) = item.args {
+                if let IResult::Done(_, res) = $parser(args.as_bytes()) {
+                    $results_handler(res);
+                    continue;
+                }
+            }
+            sd.unprocessed_items.push(item);
+        }}}
+
         match item {
             Item { key: "platform", ..}             => singleton_arg!(.platform),
             Item { key: "identity-ed25519", ..}     => first_obj!(.identity_ed25519),
@@ -228,58 +244,41 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
             Item { key: "router-sig-ed25519", ..}   => singleton_arg!(.router_sig_ed25519),
             Item { key: "router-signature", ..}     => first_obj!(.router_signature),
 
-            Item { key: "router", args: Some(args), ..} => {
-                if let IResult::Done(_, p) = router(args.as_bytes()) {
-                    let (nickname, address, or_port, socks_port, dir_port) = p;
-                    sd.nickname   = nickname;
-                    sd.address    = Some(address);
-                    sd.or_port    = or_port;
-                    sd.socks_port = socks_port;
-                    sd.dir_port   = dir_port;
-                } else {
-                    sd.unprocessed_items.push(item);
-                }
-            },
+            Item { key: "router", ..} => use_parser!(router, |r| {
+                let (nickname, address, or_port, socks_port, dir_port) = r;
+                sd.nickname   = nickname;
+                sd.address    = Some(address);
+                sd.or_port    = or_port;
+                sd.socks_port = socks_port;
+                sd.dir_port   = dir_port;
+            }),
 
-            Item { key: "bandwidth", args: Some(args), ..} => {
-                if let IResult::Done(_, p) = bandwidth(args.as_bytes()) {
-                    let (avg, bur, obs) = p;
-                    sd.bandwidth_avg      = avg;
-                    sd.bandwidth_burst    = bur;
-                    sd.bandwidth_observed = obs;
-                } else {
-                    sd.unprocessed_items.push(item);
-                }
-            },
+            Item { key: "bandwidth", ..} => use_parser!(bandwidth, |r| {
+                let (avg, bur, obs)   = r;
+                sd.bandwidth_avg      = avg;
+                sd.bandwidth_burst    = bur;
+                sd.bandwidth_observed = obs;
+            }),
 
-            Item { key: "uptime", args: Some(args), ..} => {
-                if let IResult::Done(_, p) = uptime(args.as_bytes()) {
-                    sd.uptime = Some(p);
-                } else {
-                    sd.unprocessed_items.push(item);
-                }
+            Item { key: "uptime", ..} => {
+                use_parser!(uptime, |r| sd.uptime = Some(r) )
             }
 
             Item { key: "hidden-service-dir", args, ..} => {
                 sd.hidden_service_dir = args;
             }
 
-            Item { key: "accept", args: Some(args), ..} |
-            Item { key: "reject", args: Some(args), ..} => {
+            Item { key: "accept", ..} |
+            Item { key: "reject", ..} => {
                 let rule = match item.key {
                     "accept" => Rule::Accept,
                     "reject" => Rule::Reject,
                     _ => unreachable!(),
                 };
 
-                if let IResult::Done(_, res) = parse_exit_pattern(args.as_bytes()) {
-                    let (a,p) = res;
-                    sd.exit_policy.push(
-                        ExitPattern{ rule: rule, addr: a, port: p }
-                    );
-                } else {
-                    sd.unprocessed_items.push(item);
-                }
+                use_parser!(parse_exit_pattern, |(a,p)| {
+                    sd.exit_policy.push( ExitPattern{ rule: rule, addr: a, port: p } );
+                })
             }
 
             _ => {
