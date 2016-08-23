@@ -176,10 +176,10 @@ pub fn parse(input: &str) -> Result<ServerDescriptor, ParseError> {
 }
 
 pub fn parse_all(input: &str) -> Vec<ServerDescriptor> {
-    parse_all_items(input).into_iter().map(transmogrify).collect()
+    extract_all_item_buckets(input).into_iter().map(transmogrify).collect()
 }
 
-pub fn parse_all_items(input: &str) -> Vec<Vec<Item>> { //TODO: tmp
+fn extract_all_item_buckets(input: &str) -> Vec<Vec<Item>> {
     match server_descriptor_bucket_aggregator(&input.as_bytes()[..]) {
         IResult::Done(_i, sda) => sda,
         _ => Vec::new()
