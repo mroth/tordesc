@@ -1,6 +1,7 @@
 extern crate tordesc;
 
 use tordesc::server_descriptor::*;
+use tordesc::server_descriptor::exit_policy::*;
 
 use std::fs::File;
 use std::io::{Read,BufReader};
@@ -189,6 +190,30 @@ tWJ53g/ru8Hiy+h9Wa5gI+Eog/z4hj36GBiaTXJoG3M=
 -----END SIGNATURE-----
 "#);
     assert_eq!(parse(SAMPLE).unwrap().router_signature, expected);
+}
+
+#[test]
+fn parse_exit_policy() {
+    let sd = parse(SAMPLE).unwrap();
+    // correct number of exit patterns
+    assert_eq!(sd.exit_policy.len(), 14);
+    // order is preserved
+    assert_eq!(sd.exit_policy.first(), Some(
+        &ExitPattern {
+            rule: Rule::Reject,
+            addr: AddrSpec::Ipv4(
+                Ipv4Spec::CIDR { addr: Ipv4Addr::new(0,0,0,0), prefix: 8 }
+            ),
+            port: PortSpec::Wildcard,
+        }
+    ));
+    assert_eq!(sd.exit_policy.last(), Some(
+        &ExitPattern {
+            rule: Rule::Reject,
+            addr: AddrSpec::Wildcard,
+            port: PortSpec::Wildcard,
+        }
+    ));
 }
 
 #[test]

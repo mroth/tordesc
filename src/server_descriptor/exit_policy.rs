@@ -43,7 +43,7 @@ use grammar::*;
 pub type ExitPolicy = Vec<ExitPattern>;
 
 /// Defines a single directive in the OR's exit policy.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ExitPattern {
     /// Whether the pattern indicates network traffic that should be accepted or rejected.
     pub rule: Rule,
@@ -54,7 +54,7 @@ pub struct ExitPattern {
 }
 
 /// Indicates if a pattern accepts or rejects network traffic.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Rule { Accept, Reject }
 
 
