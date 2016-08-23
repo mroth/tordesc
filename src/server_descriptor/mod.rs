@@ -2,7 +2,7 @@
 
 use std::str;
 use std::net::Ipv4Addr;
-use nom::{line_ending, not_line_ending, alphanumeric, space};
+use nom::{line_ending, alphanumeric, space};
 use nom::IResult;
 
 pub mod exit_policy;
@@ -214,6 +214,7 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
         }}}
 
         match item {
+            Item { key: "platform", ..}             => singleton_arg!(.platform),
             Item { key: "identity-ed25519", ..}     => first_obj!(.identity_ed25519),
             Item { key: "master-key-ed25519", ..}   => singleton_arg!(.master_key_ed25519),
             Item { key: "protocols", ..}            => singleton_arg!(.protocols),
@@ -237,12 +238,6 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                     sd.dir_port   = dir_port;
                 }
                 // TODO: mark err in unprocessed_items
-            },
-
-            Item { key: "platform", args: Some(args), ..} => {
-                if let IResult::Done(_, p) = platform(args.as_bytes()) {
-                    sd.platform = Some(p);
-                }
             },
 
             Item { key: "bandwidth", args: Some(args), ..} => {
@@ -370,24 +365,6 @@ named!(bandwidth <(u64, u64, u64)>,
         || { (avg, bur, obs) }
     )
 );
-
-// "platform" string NL
-//
-//    [At most once]
-//
-//    A human-readable string describing the system on which this OR is
-//    running.  This MAY include the operating system, and SHOULD include
-//    the name and version of the software implementing the Tor protocol.
-named!(platform <&str>,
-    map_res!(not_line_ending, str::from_utf8)
-);
-// named!(platform <&[u8], String>,
-//     chain!(
-//         tag!("platform") ~ space ~
-//         p: map_res!(not_line_ending, str::from_utf8) ,
-//         || { p }
-//     )
-// );
 
 // "uptime" number NL
 //
