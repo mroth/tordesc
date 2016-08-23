@@ -145,8 +145,20 @@ pub struct ServerDescriptor<'a> {
     /// The rules this OR follows when deciding whether to allow a new stream to a given address.
     pub exit_policy: ExitPolicy,
 
-    // we own unprocessed items here, for later debugging...
-    // they will show up when we dump the items, so easy to visualize what we're not handling.
+    /// Items we have successfully parsed from a ServerDescriptor, but have not been processed
+    /// into structured data.
+    ///
+    /// This is most likely either something not built in to this library yet, or third-party
+    /// extensions to the format.
+    ///
+    /// Extensions, wat? Yep:
+    ///  > Other implementations that want to extend Tor's directory format MAY
+    ///  > introduce their own items.  The keywords for extension items SHOULD start
+    ///  > with the characters `x-` or `X-`, to guarantee that they will not conflict
+    ///  > with keywords used by future versions of Tor.
+    ///
+    /// This is primarily provided for debugging purposes, or if you want to get access to
+    /// something strange.
     pub unprocessed_items: Vec<Item<'a>>,
 }
 // TODO: implement Validate() to check things at end?
