@@ -229,22 +229,22 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
             sd.unprocessed_items.push(item);
         }}}
 
-        match item {
-            Item { key: "platform", ..}             => singleton_arg!(.platform),
-            Item { key: "identity-ed25519", ..}     => first_obj!(.identity_ed25519),
-            Item { key: "master-key-ed25519", ..}   => singleton_arg!(.master_key_ed25519),
-            Item { key: "protocols", ..}            => singleton_arg!(.protocols),
-            Item { key: "fingerprint", ..}          => singleton_arg!(.fingerprint),
-            Item { key: "published", ..}            => singleton_arg!(.published),
-            Item { key: "extra-info-digest", ..}    => singleton_arg!(.extra_info_digest),
-            Item { key: "onion-key", ..}            => first_obj!(.onion_key),
-            Item { key: "signing-key", ..}          => first_obj!(.signing_key),
-            Item { key: "contact", ..}              => singleton_arg!(.contact),
-            Item { key: "ntor-onion-key", ..}       => singleton_arg!(.ntor_onion_key),
-            Item { key: "router-sig-ed25519", ..}   => singleton_arg!(.router_sig_ed25519),
-            Item { key: "router-signature", ..}     => first_obj!(.router_signature),
+        match item.key {
+            "platform"             => singleton_arg!(.platform),
+            "identity-ed25519"     => first_obj!(.identity_ed25519),
+            "master-key-ed25519"   => singleton_arg!(.master_key_ed25519),
+            "protocols"            => singleton_arg!(.protocols),
+            "fingerprint"          => singleton_arg!(.fingerprint),
+            "published"            => singleton_arg!(.published),
+            "extra-info-digest"    => singleton_arg!(.extra_info_digest),
+            "onion-key"            => first_obj!(.onion_key),
+            "signing-key"          => first_obj!(.signing_key),
+            "contact"              => singleton_arg!(.contact),
+            "ntor-onion-key"       => singleton_arg!(.ntor_onion_key),
+            "router-sig-ed25519"   => singleton_arg!(.router_sig_ed25519),
+            "router-signature"     => first_obj!(.router_signature),
 
-            Item { key: "router", ..} => use_parser!(router, |r| {
+            "router" => use_parser!(router, |r| {
                 let (nickname, address, or_port, socks_port, dir_port) = r;
                 sd.nickname   = nickname;
                 sd.address    = Some(address);
@@ -253,23 +253,22 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 sd.dir_port   = dir_port;
             }),
 
-            Item { key: "bandwidth", ..} => use_parser!(bandwidth, |r| {
+            "bandwidth" => use_parser!(bandwidth, |r| {
                 let (avg, bur, obs)   = r;
                 sd.bandwidth_avg      = avg;
                 sd.bandwidth_burst    = bur;
                 sd.bandwidth_observed = obs;
             }),
 
-            Item { key: "uptime", ..} => {
+            "uptime" => {
                 use_parser!(uptime, |r| sd.uptime = Some(r) )
             }
 
-            Item { key: "hidden-service-dir", args, ..} => {
-                sd.hidden_service_dir = args;
+            "hidden-service-dir" => {
+                sd.hidden_service_dir = item.args;
             }
 
-            Item { key: "accept", ..} |
-            Item { key: "reject", ..} => {
+            "accept" | "reject" => {
                 let rule = match item.key {
                     "accept" => Rule::Accept,
                     "reject" => Rule::Reject,
