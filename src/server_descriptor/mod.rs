@@ -260,22 +260,18 @@ fn transmogrify(item_bucket: Vec<Item>) -> ServerDescriptor { // TODO: make this
                 sd.hidden_service_dir = args;
             }
 
-            Item { key: "accept", args: Some(args), ..} => {
-                if let IResult::Done(_, res) = parse_exit_pattern(args.as_bytes()) {
-                    let (a,p) = res;
-                    sd.exit_policy.push(
-                        ExitPattern{ rule: Rule::Accept, addr: a, port: p }
-                    );
-                } else {
-                    sd.unprocessed_items.push(item);
-                }
-            }
-
+            Item { key: "accept", args: Some(args), ..} |
             Item { key: "reject", args: Some(args), ..} => {
+                let rule = match item.key {
+                    "accept" => Rule::Accept,
+                    "reject" => Rule::Reject,
+                    _ => unreachable!(),
+                };
+
                 if let IResult::Done(_, res) = parse_exit_pattern(args.as_bytes()) {
                     let (a,p) = res;
                     sd.exit_policy.push(
-                        ExitPattern{ rule: Rule::Reject, addr: a, port: p }
+                        ExitPattern{ rule: rule, addr: a, port: p }
                     );
                 } else {
                     sd.unprocessed_items.push(item);
