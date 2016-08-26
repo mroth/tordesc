@@ -217,7 +217,6 @@ named!(port_spec_port <PortSpec>, map!(u16_digit, |d| PortSpec::Port(d)) );
 //-----------------------------------------------------------------------------------------------
 
 
-// TODO: this should be hidden away...
 #[test]
 fn test_exit_pattern() {
     let test_cases = vec![

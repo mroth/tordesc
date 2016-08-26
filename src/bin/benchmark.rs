@@ -7,8 +7,6 @@ use std::cmp::min;
 use std::time::Instant;
 use std::collections::HashMap;
 
-// TODO: for another good example, see also: https://github.com/shepmaster/sxd-document
-
 fn measure_average_advertised_bandwidth(for_filename: &str) {
     let data = file_data(for_filename);
 
