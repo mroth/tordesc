@@ -1,6 +1,7 @@
 # tordesc-rs
 > Tor network descriptor parsing library, written in Rust.
 
+**WORK IN PROGRESS** 
 An experimental proof-of-concept implementation of parsing Tor network
 descriptors via a Rust library.
 
